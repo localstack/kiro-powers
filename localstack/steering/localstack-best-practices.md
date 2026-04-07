@@ -34,16 +34,15 @@ DEBUG=1 PERSISTENCE=1 ENFORCE_IAM=soft localstack start -d
 
 ### Key Environment Variables
 
-| Variable | Description | Recommended Value |
-|----------|-------------|-------------------|
-| `DEBUG` | Enable verbose debug logging | `1` when troubleshooting |
-| `PERSISTENCE` | Retain state across container restarts | `1` during development |
-| `ENFORCE_IAM` | IAM policy enforcement mode | `soft` for discovery, `1` for validation |
-| `LOCALSTACK_AUTH_TOKEN` | Required for Pro features | Set in shell profile |
-| `GATEWAY_LISTEN` | LocalStack port | `4566` (default) |
-| `LS_LOG` | Log level | `trace` for maximum verbosity |
-| `LAMBDA_DEBUG` | Enable Lambda debug mode | `1` when debugging functions |
-| `MAIN_CONTAINER_NAME` | Docker container name | `localstack-main` (default) |
+| Variable              | Description                            | Recommended Value                        |
+| --------------------- | -------------------------------------- | ---------------------------------------- |
+| `DEBUG`               | Enable verbose debug logging           | `1` when troubleshooting                 |
+| `PERSISTENCE`         | Retain state across container restarts | `1` during development                   |
+| `ENFORCE_IAM`         | IAM policy enforcement mode            | `soft` for discovery, `1` for validation |
+| `GATEWAY_LISTEN`      | LocalStack port                        | `4566` (default)                         |
+| `LS_LOG`              | Log level                              | `trace` for maximum verbosity            |
+| `LAMBDA_DEBUG`        | Enable Lambda debug mode               | `1` when debugging functions             |
+| `MAIN_CONTAINER_NAME` | Docker container name                  | `localstack-main` (default)              |
 
 ## AWS Service Interaction
 
@@ -155,11 +154,11 @@ client = boto3.client(
 
 ```javascript
 // JavaScript (AWS SDK v3)
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client } from '@aws-sdk/client-s3';
 const client = new S3Client({
-  endpoint: "http://localhost:4566",
-  region: "us-east-1",
-  credentials: { accessKeyId: "test", secretAccessKey: "test" },
+  endpoint: 'http://localhost:4566',
+  region: 'us-east-1',
+  credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
   forcePathStyle: true, // Required for S3
 });
 ```
