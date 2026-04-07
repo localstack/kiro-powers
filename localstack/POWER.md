@@ -189,6 +189,7 @@ Before using the LocalStack Power, ensure you have the following installed:
 4. **AWS CLI + awslocal wrapper** (for running commands against LocalStack)
    - Install AWS CLI: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
    - Install awslocal: `pip install awscli-local`
+   - Check: `which awslocal` (note: `awslocal --version` is not a valid command — use `which awslocal` to verify installation)
 
 5. **IaC wrapper tools** (optional, for deploying infrastructure):
    - Terraform users: `pip install terraform-local` (provides `tflocal`)
@@ -198,15 +199,41 @@ Before using the LocalStack Power, ensure you have the following installed:
 
 ### Step 1: Set Your Auth Token
 
-A LocalStack Auth Token is required. Core emulation features can be used with a free, non-commerical-use Hobby account, but some features require a paid subscription.
+A LocalStack Auth Token is required. Core emulation features can be used with a free, non-commercial-use Hobby account, but some features require a paid subscription.
 
 Get your token at: https://app.localstack.cloud/workspace/auth-token
+
+**Option A: Set it in the Power's `mcp.json` (recommended for Kiro)**
+
+Open the LocalStack Power's `mcp.json` and replace `${LOCALSTACK_AUTH_TOKEN}` with your actual token:
+
+```json
+{
+  "mcpServers": {
+    "localstack": {
+      "command": "npx",
+      "args": ["-y", "@localstack/localstack-mcp-server"],
+      "env": {
+        "LOCALSTACK_AUTH_TOKEN": "ls-your-actual-token-here"
+      }
+    }
+  }
+}
+```
+
+This passes the token to the MCP server automatically. You do **not** need it exported as a shell environment variable for Kiro MCP tools to work.
+
+**Option B: Set it as a shell environment variable**
+
+Required if you also use the LocalStack CLI or `awslocal` commands directly in a terminal outside of Kiro:
 
 ```bash
 export LOCALSTACK_AUTH_TOKEN=your_token_here
 ```
 
 Or add it to your shell profile (`~/.zshrc`, `~/.bashrc`) for persistence.
+
+> **Note:** The Kiro setup check (`echo $LOCALSTACK_AUTH_TOKEN`) only detects Option B. If you configured your token via Option A (mcp.json), the check will show empty — this is expected and the MCP server will still work correctly.
 
 ### Step 2: Start LocalStack
 
@@ -224,7 +251,7 @@ curl http://localhost:4566/_localstack/health | jq
 
 ### Step 3: Verify the MCP Server
 
-The LocalStack MCP server is installed automatically via `npx` when Kiro starts. Verify `LOCALSTACK_AUTH_TOKEN` is set in your environment.
+The LocalStack MCP server is installed automatically via `npx` when Kiro starts. Verify your auth token is configured — either as `LOCALSTACK_AUTH_TOKEN` in the Power's `mcp.json` (recommended) or as a shell environment variable (see Step 1).
 
 ### Step 4: Start Building
 
@@ -341,7 +368,7 @@ localstack start 2>&1 | head -50
 
 ### MCP Server Not Connecting
 
-- Verify `LOCALSTACK_AUTH_TOKEN` is set in your shell environment
+- Verify your auth token is configured in the Power's `mcp.json` (preferred) or exported as `$LOCALSTACK_AUTH_TOKEN` in your shell
 - Ensure Node.js v22+ is installed: `node --version`
 - Try running manually: `npx -y @localstack/localstack-mcp-server`
 
@@ -359,14 +386,17 @@ localstack stop && DEBUG=1 localstack start -d
 
 ```bash
 pip install awscli-local
-# Verify
-awslocal s3 ls
+# Verify installation (use 'which', not '--version' — awslocal has no version flag)
+which awslocal
 ```
+
+If `which awslocal` returns a path, the tool is installed. The setup check `awslocal --version` will fail even when `awslocal` is correctly installed — use `which awslocal` instead.
 
 ### Emulator Enhancement Features Not Working
 
 - Verify your auth token is valid at https://app.localstack.cloud/
-- Check the token is exported: `echo $LOCALSTACK_AUTH_TOKEN`
+- If using mcp.json configuration: confirm the token is set directly in the `env` block of the Power's `mcp.json`, not as `${LOCALSTACK_AUTH_TOKEN}` placeholder
+- If using shell env var: `echo $LOCALSTACK_AUTH_TOKEN`
 - Ensure your subscription includes the feature you're trying to use
 
 ---
