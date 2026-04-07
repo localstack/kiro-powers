@@ -203,9 +203,9 @@ A LocalStack Auth Token is required. Core emulation features can be used with a 
 
 Get your token at: https://app.localstack.cloud/workspace/auth-token
 
-**Option A: Set it in the Power's `mcp.json` (recommended for Kiro)**
+**Configure it in the Power's `mcp.json`:**
 
-Open the LocalStack Power's `mcp.json` and replace `${LOCALSTACK_AUTH_TOKEN}` with your actual token:
+Open the LocalStack Power's `mcp.json` and replace `${LOCALSTACK_AUTH_TOKEN}` with your actual token value:
 
 ```json
 {
@@ -221,19 +221,9 @@ Open the LocalStack Power's `mcp.json` and replace `${LOCALSTACK_AUTH_TOKEN}` wi
 }
 ```
 
-This passes the token to the MCP server automatically. You do **not** need it exported as a shell environment variable for Kiro MCP tools to work.
+This is the only configuration needed for Kiro MCP tools to authenticate. Do **not** check for or require a shell environment variable — the token in `mcp.json` is passed directly to the MCP server and is sufficient.
 
-**Option B: Set it as a shell environment variable**
-
-Required if you also use the LocalStack CLI or `awslocal` commands directly in a terminal outside of Kiro:
-
-```bash
-export LOCALSTACK_AUTH_TOKEN=your_token_here
-```
-
-Or add it to your shell profile (`~/.zshrc`, `~/.bashrc`) for persistence.
-
-> **Note:** The Kiro setup check (`echo $LOCALSTACK_AUTH_TOKEN`) only detects Option B. If you configured your token via Option A (mcp.json), the check will show empty — this is expected and the MCP server will still work correctly.
+> **CLI usage only:** If you also run `localstack start` or `awslocal` commands from a terminal outside of Kiro, you can additionally add `export LOCALSTACK_AUTH_TOKEN=your_token_here` to your shell profile (`~/.zshrc` or `~/.bashrc`). This is separate from the Kiro MCP configuration and not required for the Power to function.
 
 ### Step 2: Start LocalStack
 
@@ -251,7 +241,7 @@ curl http://localhost:4566/_localstack/health | jq
 
 ### Step 3: Verify the MCP Server
 
-The LocalStack MCP server is installed automatically via `npx` when Kiro starts. Verify your auth token is configured — either as `LOCALSTACK_AUTH_TOKEN` in the Power's `mcp.json` (recommended) or as a shell environment variable (see Step 1).
+The LocalStack MCP server is installed automatically via `npx` when Kiro starts. Verify your auth token is set as the `LOCALSTACK_AUTH_TOKEN` value in the Power's `mcp.json` (see Step 1). No shell environment variable is needed for the MCP server to work.
 
 ### Step 4: Start Building
 
@@ -368,9 +358,9 @@ localstack start 2>&1 | head -50
 
 ### MCP Server Not Connecting
 
-- Verify your auth token is configured in the Power's `mcp.json` (preferred) or exported as `$LOCALSTACK_AUTH_TOKEN` in your shell
+- Verify `LOCALSTACK_AUTH_TOKEN` is set to your actual token value in the Power's `mcp.json` (not the `${LOCALSTACK_AUTH_TOKEN}` placeholder)
 - Ensure Node.js v22+ is installed: `node --version`
-- Try running manually: `npx -y @localstack/localstack-mcp-server`
+- Try running manually: `LOCALSTACK_AUTH_TOKEN=your-token npx -y @localstack/localstack-mcp-server`
 
 ### Services Not Available
 
@@ -392,12 +382,11 @@ which awslocal
 
 If `which awslocal` returns a path, the tool is installed. The setup check `awslocal --version` will fail even when `awslocal` is correctly installed — use `which awslocal` instead.
 
-### Emulator Enhancement Features Not Working
+### Pro/Emulator Enhancement Features Not Working
 
 - Verify your auth token is valid at https://app.localstack.cloud/
-- If using mcp.json configuration: confirm the token is set directly in the `env` block of the Power's `mcp.json`, not as `${LOCALSTACK_AUTH_TOKEN}` placeholder
-- If using shell env var: `echo $LOCALSTACK_AUTH_TOKEN`
-- Ensure your subscription includes the feature you're trying to use
+- Confirm the token is set directly in the `env` block of the Power's `mcp.json`, not left as the `${LOCALSTACK_AUTH_TOKEN}` placeholder
+- Ensure your subscription tier includes the feature you're trying to use
 
 ---
 
