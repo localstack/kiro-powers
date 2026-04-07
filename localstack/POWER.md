@@ -1,7 +1,7 @@
 ---
 name: 'localstack'
 displayName: 'Develop AWS apps with LocalStack'
-description: 'Build, test, and debug AWS applications locally using LocalStack. Manage the local cloud environment, deploy infrastructure with CDK/Terraform/SAM, analyze logs, enforce IAM policies, inject chaos faults, and manage state snapshots — all without touching real AWS.'
+description: 'Build, test, and debug AWS applications locally and in CI/CD using LocalStack. Manage the local cloud environment, deploy infrastructure with CDK/Terraform/SAM, analyze logs, enforce IAM policies, inject chaos faults, and manage state snapshots.'
 keywords:
   [
     'localstack',
