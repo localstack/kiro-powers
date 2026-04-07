@@ -2,15 +2,26 @@
 
 Guidelines for managing LocalStack state with local snapshots, Cloud Pods, and persistence.
 
+## MCP: `localstack-cloud-pods`
+
+For Cloud Pod workflows inside Kiro (where your plan allows), use **`localstack-cloud-pods`** to save, load, list, or reset state when the user wants snapshot operations without hand-rolling CLI flags. It aligns with the [LocalStack MCP server](https://github.com/localstack/localstack-mcp-server) implementation. Local **`localstack state export` / `import`** remains the right choice for file-based snapshots that stay entirely on disk.
+
+```javascript
+usePower('localstack', 'localstack', 'localstack-cloud-pods', {
+  action: 'save',
+  pod_name: 'my-feature-branch-state',
+});
+```
+
 ## Overview
 
 LocalStack provides three mechanisms for state management:
 
-| Mechanism | Storage | Requires Pro | Best For |
-|-----------|---------|--------------|----------|
-| Local Persistence (`PERSISTENCE=1`) | Local disk | No | Simple dev-loop state retention |
-| Local Snapshots (`state export/import`) | Local files | No | CI/CD, backups, version control |
-| Cloud Pods (`pod save/load`) | LocalStack cloud | Yes | Team sharing, cross-machine access |
+| Mechanism | Storage | Typical plan access | Best For |
+|-----------|---------|----------------------|----------|
+| Local Persistence (`PERSISTENCE=1`) | Local disk | Any authenticated user | Simple dev-loop state retention |
+| Local Snapshots (`state export/import`) | Local files | Any authenticated user | CI/CD, backups, version control |
+| Cloud Pods (`pod save/load`) | LocalStack cloud | Often a paid or team tier—confirm in workspace | Team sharing, cross-machine access |
 
 ---
 
@@ -32,7 +43,7 @@ PERSISTENCE=1 localstack start -d
 
 ## Local Snapshots (State Export/Import)
 
-Export and import LocalStack state to/from local zip files. Works without a Pro subscription.
+Export and import LocalStack state to/from local zip files. Available to all authenticated users; does not use Cloud Pod cloud storage.
 
 ### Exporting State
 
@@ -62,15 +73,19 @@ localstack state import /path/to/backups/state-20250101.zip
 
 ---
 
-## Cloud Pods (Requires LocalStack Pro)
+## Cloud Pods
 
-Cloud Pods store state in LocalStack's cloud platform for team collaboration and remote access.
+Cloud Pods store state in LocalStack's cloud platform for team collaboration and remote access. **Availability depends on your plan tier**—confirm Cloud Pods are enabled for your account before relying on them.
 
 ### Prerequisites
 
+Authenticate once on the machine (preferred over ad hoc `export` in every shell):
+
 ```bash
-export LOCALSTACK_AUTH_TOKEN=<your-pro-token>
+localstack auth set-token <your-auth-token>
 ```
+
+Confirm: `localstack auth show-token` should report `Valid: True`. For Kiro-only workflows, ensure the Power's `mcp.json` also supplies `LOCALSTACK_AUTH_TOKEN` to the MCP server.
 
 ### Saving State
 
@@ -116,7 +131,7 @@ localstack pod delete my-pod-name
 
 ## Recommended Workflows
 
-### Individual Developer (No Pro Required)
+### Individual developer (persistence and local snapshots)
 
 ```bash
 # Start with persistence for basic state retention
@@ -132,7 +147,7 @@ localstack state export before-migration.zip
 localstack state import before-migration.zip
 ```
 
-### Team Collaboration (Pro Required)
+### Team collaboration (Cloud Pods)
 
 ```bash
 # Team lead sets up baseline environment
@@ -140,8 +155,8 @@ localstack start -d
 # ... creates resources, deploys infrastructure ...
 localstack pod save team-dev-baseline --message "S3 buckets, DynamoDB tables, Lambda functions for sprint 42"
 
-# Each developer loads the shared baseline
-export LOCALSTACK_AUTH_TOKEN=<token>
+# Each developer loads the shared baseline (token via CLI config, not per-session export)
+localstack auth set-token <token>
 localstack start -d
 localstack pod load team-dev-baseline
 
@@ -158,8 +173,9 @@ localstack state import ./ci/baseline-state.zip
 # Run tests
 pytest tests/
 
-# Option 2: Load a Cloud Pod (Pro, no state file in repo)
-LOCALSTACK_AUTH_TOKEN=$TOKEN localstack start -d
+# Option 2: Load a Cloud Pod (no state file in repo; requires Cloud Pods on your plan)
+# In CI, set token once via `localstack auth set-token` in the job image, or inject LOCALSTACK_AUTH_TOKEN for that process only
+localstack start -d
 localstack pod load ci-test-baseline
 # Run tests
 pytest tests/

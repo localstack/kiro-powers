@@ -2,6 +2,18 @@
 
 Auto-loaded when working on LocalStack-related projects.
 
+## MCP tools in Kiro (prefer these first)
+
+The LocalStack Power wires the [LocalStack MCP Server](https://github.com/localstack/localstack-mcp-server). Use tools by name when they fit the task:
+
+- **`localstack-docs`** — Coverage, configuration, and how-to questions (works without a running LocalStack instance; good sanity check after auth setup).
+- **`localstack-management`** — Start, stop, restart, and status of the LocalStack container; health-style checks without scripting Docker by hand.
+- **`localstack-logs-analysis`** — Structured summaries, errors-by-service, and metrics from logs instead of asking the user to paste raw `localstack logs`.
+- **`localstack-aws-client`** — Safe `awslocal` execution inside the configured container context (sanitized; avoids accidental real-AWS calls).
+- **`localstack-iam-policy-analyzer`** — IAM enforcement modes, violations from logs, and generated policies when your plan tier includes this capability.
+
+Fall back to terminal commands when the user explicitly wants local scripts, CI logs, or the MCP server is unavailable — but default to MCP for interactive assistance.
+
 ## General Principles
 
 - **ALWAYS** use `awslocal` instead of `aws` CLI when interacting with LocalStack. `awslocal` is a thin wrapper that automatically routes requests to `http://localhost:4566`.
@@ -103,6 +115,10 @@ curl http://localhost:4566/_localstack/info | jq
 
 ### Viewing Logs
 
+**In Kiro:** Prefer **`localstack-logs-analysis`** (modes such as errors, summary, or raw segments) before asking for full log dumps.
+
+**In a terminal:**
+
 ```bash
 # Follow logs in real time
 localstack logs -f
@@ -165,10 +181,10 @@ const client = new S3Client({
 
 ## Troubleshooting Checklist
 
-1. **Is LocalStack running?** → `localstack status`
+1. **Is LocalStack running?** → `localstack status`, or **`localstack-management`** with a status action in Kiro
 2. **Are the services initialized?** → `curl http://localhost:4566/_localstack/health | jq`
 3. **Are you using the right endpoint?** → `http://localhost:4566`
 4. **Are you using awslocal/wrapper tools?** → Not bare `aws`, `terraform`, `cdk`
-5. **Is your auth token set for Pro features?** → `echo $LOCALSTACK_AUTH_TOKEN`
-6. **Are there errors in the logs?** → `localstack logs | grep -i error`
-7. **Does the resource exist?** → `awslocal <service> list-<resources>`
+5. **Is your auth token configured (MCP and CLI)?** → **Do not** use `echo $LOCALSTACK_AUTH_TOKEN` — the MCP token lives in Power `mcp.json`. For CLI, run `localstack auth show-token` and expect `Valid: True`, or use **`localstack-docs`** in Kiro to confirm MCP auth. If the token is valid but a feature still fails, check whether your **plan tier** includes that capability.
+6. **Are there errors in the logs?** → **`localstack-logs-analysis`** in Kiro, or `localstack logs | grep -i error` in a terminal
+7. **Does the resource exist?** → **`localstack-aws-client`** or `awslocal <service> list-<resources>`

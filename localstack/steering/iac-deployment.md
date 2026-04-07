@@ -2,6 +2,20 @@
 
 Guidelines for deploying Terraform, CDK, CloudFormation, and Pulumi against LocalStack.
 
+## MCP: `localstack-deployer`
+
+In Kiro, use the **`localstack-deployer`** tool when the user wants to deploy from a project directory and the repo already uses `cdklocal`, `tflocal`, or `samlocal`. It runs the same wrappers the [LocalStack MCP server](https://github.com/localstack/localstack-mcp-server) documents, with automatic configuration detection where possible.
+
+```javascript
+usePower('localstack', 'localstack', 'localstack-deployer', {
+  action: 'deploy',
+  projectType: 'terraform',
+  directory: './infra',
+});
+```
+
+Use terminal `tflocal` / `cdklocal` / `samlocal` when the user is iterating in their own shell, when paths or env are highly custom, or when `localstack-deployer` is not available. Combine with **`localstack-logs-analysis`** if deploys fail and you need structured errors.
+
 ## Core Principle: Always Use Wrapper Tools
 
 LocalStack provides drop-in wrapper tools that automatically configure all AWS provider endpoints to point to `http://localhost:4566`. **ALWAYS** use these wrappers — they require zero changes to your existing IaC code.

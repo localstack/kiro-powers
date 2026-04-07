@@ -30,7 +30,7 @@ author: 'LocalStack'
 
 ## Overview
 
-LocalStack is a fully functional local cloud stack that emulates AWS services on your machine. The LocalStack Power gives you intelligent tooling to manage your local cloud environment, deploy infrastructure, debug issues, and simulate real-world failure conditions — with no cloud waste.
+LocalStack is a fully functional local cloud stack that emulates AWS services on your machine. **Every developer must use a LocalStack auth token** (including free Hobby accounts); **your plan tier** determines which product features and MCP tools you can use. The LocalStack Power gives you intelligent tooling to manage your local cloud environment, deploy infrastructure, debug issues, and simulate real-world failure conditions — with no cloud waste.
 
 **Key capabilities:**
 
@@ -47,11 +47,11 @@ LocalStack is a fully functional local cloud stack that emulates AWS services on
 
 ## Available Steering Files
 
-This power includes the following steering files:
+Load the right steering file for the task so guidance stays focused and MCP-backed workflows stay front and center:
 
-- **localstack-best-practices** - General best practices for developing against LocalStack (auto-loads for LocalStack-related files)
-- **iac-deployment** - Guidance for deploying Terraform, CDK, CloudFormation, and Pulumi to LocalStack
-- **state-management** - Working with Cloud Pods, local snapshots, and persistence
+- **localstack-best-practices** — Day-to-day LocalStack development, endpoints, health checks, and when to use MCP tools (`localstack-management`, `localstack-logs-analysis`, `localstack-aws-client`, `localstack-docs`) instead of ad hoc shell commands.
+- **iac-deployment** — Deploying with Terraform, CDK, SAM, CloudFormation, or Pulumi; prefers **`localstack-deployer`** MCP where appropriate, with `tflocal` / `cdklocal` / etc. as the terminal fallback.
+- **state-management** — Persistence, local state export/import, and Cloud Pods; uses **`localstack-cloud-pods`** MCP for Cloud Pod workflows alongside CLI patterns (where your plan tier allows).
 
 ## Available MCP Tools
 
@@ -62,7 +62,7 @@ This power includes the following steering files:
 ```javascript
 usePower('localstack', 'localstack', 'localstack-management', {
   action: 'start',
-  env: { DEBUG: '1', PERSISTENCE: '1' },
+  envVars: { DEBUG: '1', PERSISTENCE: '1' },
 });
 ```
 
@@ -72,8 +72,8 @@ usePower('localstack', 'localstack', 'localstack-management', {
 
 ```javascript
 usePower('localstack', 'localstack', 'localstack-deployer', {
-  tool: 'terraform',
-  action: 'apply',
+  action: 'deploy',
+  projectType: 'terraform',
   directory: './infra',
 });
 ```
@@ -94,49 +94,68 @@ usePower('localstack', 'localstack', 'localstack-aws-client', {
 
 ```javascript
 usePower('localstack', 'localstack', 'localstack-logs-analysis', {
-  mode: 'errors',
+  analysisType: 'errors',
   service: 'lambda',
 });
 ```
 
 ### IAM Policy Analyzer
 
-**`localstack-iam-policy-analyzer`** - Set IAM enforcement levels, detect permission violations, and auto-generate least-privilege IAM policies based on actual access patterns observed in logs. Requires LocalStack Pro.
+**`localstack-iam-policy-analyzer`** - Set IAM enforcement levels, detect permission violations, and auto-generate least-privilege IAM policies based on actual access patterns observed in logs. **Plan tier:** may require a higher tier than Hobby—confirm in your LocalStack workspace.
 
 ```javascript
 usePower('localstack', 'localstack', 'localstack-iam-policy-analyzer', {
-  action: 'generate-policy',
-  enforcement: 'soft',
+  action: 'set-mode',
+  mode: 'SOFT_MODE',
+});
+```
+
+```javascript
+usePower('localstack', 'localstack', 'localstack-iam-policy-analyzer', {
+  action: 'analyze-policies',
 });
 ```
 
 ### Chaos Engineering
 
-**`localstack-chaos-injector`** - Inject network latency, service errors, and fault rules to simulate real-world failure conditions and test application resilience. Requires LocalStack Pro.
+**`localstack-chaos-injector`** - Inject network latency, service errors, and fault rules to simulate real-world failure conditions and test application resilience. **Plan tier:** may require a higher tier than Hobby—confirm in your LocalStack workspace.
 
 ```javascript
 usePower('localstack', 'localstack', 'localstack-chaos-injector', {
-  action: 'inject',
-  service: 'dynamodb',
-  fault: 'error',
-  region: 'us-east-1',
+  action: 'inject-latency',
+  latency_ms: 500,
+});
+```
+
+```javascript
+usePower('localstack', 'localstack', 'localstack-chaos-injector', {
+  action: 'inject-faults',
+  rules: [
+    {
+      service: 'dynamodb',
+      region: 'us-east-1',
+      operation: 'PutItem',
+      probability: 0.2,
+      error: { statusCode: 503, code: 'ServiceUnavailable' },
+    },
+  ],
 });
 ```
 
 ### Cloud Pods (State Snapshots)
 
-**`localstack-cloud-pods`** - Save and load state snapshots (Cloud Pods) to reproduce environments, share state across team members, and preload CI/CD pipelines. Requires LocalStack Pro.
+**`localstack-cloud-pods`** - Save and load state snapshots (Cloud Pods) to reproduce environments, share state across team members, and preload CI/CD pipelines. **Plan tier:** Cloud Pods often require a paid or team tier—confirm in your LocalStack workspace.
 
 ```javascript
 usePower('localstack', 'localstack', 'localstack-cloud-pods', {
   action: 'save',
-  name: 'my-feature-branch-state',
+  pod_name: 'my-feature-branch-state',
 });
 ```
 
 ### Extensions
 
-**`localstack-extensions`** - Install, list, and uninstall LocalStack Extensions from the marketplace (e.g., MailHog for SES email capture). Requires LocalStack Pro.
+**`localstack-extensions`** - Install, list, and uninstall LocalStack Extensions from the marketplace (e.g., MailHog for SES email capture). **Plan tier:** may require a higher tier than Hobby—confirm in your LocalStack workspace.
 
 ```javascript
 usePower('localstack', 'localstack', 'localstack-extensions', {
@@ -147,11 +166,12 @@ usePower('localstack', 'localstack', 'localstack-extensions', {
 
 ### Ephemeral Instances
 
-**`localstack-ephemeral-instances`** - Launch and manage temporary cloud-hosted LocalStack instances. Ideal for CI/CD pipelines, demos, and isolated testing environments. Requires LocalStack Pro.
+**`localstack-ephemeral-instances`** - Launch and manage temporary cloud-hosted LocalStack instances. Ideal for CI/CD pipelines, demos, and isolated testing environments. **Plan tier:** may require a higher tier than Hobby—confirm in your LocalStack workspace.
 
 ```javascript
 usePower('localstack', 'localstack', 'localstack-ephemeral-instances', {
   action: 'create',
+  name: 'ci-preview-1',
   lifetime: 60,
 });
 ```
@@ -166,9 +186,48 @@ usePower('localstack', 'localstack', 'localstack-docs', {
 });
 ```
 
+### MCP-first workflows
+
+When helping in Kiro, **prefer MCP tools** over unstructured shell greps so behavior matches what the user configured in `mcp.json` and stays consistent with [LocalStack MCP Server](https://github.com/localstack/localstack-mcp-server) capabilities:
+
+| Goal                                    | Prefer                           | Instead of (when possible)                                    |
+| --------------------------------------- | -------------------------------- | ------------------------------------------------------------- |
+| Start/stop/restart or health            | `localstack-management`          | Raw `docker` commands without context                         |
+| Deploy CDK/Terraform/SAM                | `localstack-deployer`            | Manual `tflocal`/`cdklocal` in chat without project detection |
+| Read or summarize logs                  | `localstack-logs-analysis`       | Pasting huge `localstack logs` output                         |
+| Run AWS API calls against LocalStack    | `localstack-aws-client`          | Unsanitized `aws` against real AWS endpoints                  |
+| IAM violations / least-privilege drafts | `localstack-iam-policy-analyzer` | Hand-written IAM from guesses                                 |
+| Cloud Pods snapshots                    | `localstack-cloud-pods`          | Only CLI `localstack pod` when MCP fits                       |
+| Chaos / faults                          | `localstack-chaos-injector`      | Ad hoc failure injection scripts                              |
+| Docs and coverage questions             | `localstack-docs`                | Generic web search only                                       |
+
+Tools that depend on your subscription tier still require a valid auth token and the right plan for that capability; **`localstack-docs`** is the lightest check that the MCP server is up and authenticated.
+
 ---
 
 ## Onboarding
+
+### Try Power, health checks, and auth (read this first)
+
+**The LocalStack MCP server receives its auth token from the Power's MCP configuration** (the `env.LOCALSTACK_AUTH_TOKEN` entry in `mcp.json`, or a secret placeholder your IDE resolves when launching MCP). That value is **not** automatically visible in an ordinary interactive terminal session.
+
+**Do not** use any of the following to decide whether setup succeeded:
+
+- `echo $LOCALSTACK_AUTH_TOKEN`, `printenv LOCALSTACK_AUTH_TOKEN`, or `[[ -n "$LOCALSTACK_AUTH_TOKEN" ]]`
+- Requiring the user to export the token in the shell for Kiro MCP to work
+
+**Do** verify setup as follows:
+
+1. **MCP server and token (Kiro):** Invoke the **`localstack-docs`** tool with a short query such as `LocalStack Docker install`. This checks that the MCP package runs and accepts the configured token. It does **not** require LocalStack to be running. If you need runtime status, use **`localstack-management`** with `action: status` after Docker is up.
+2. **CLI and `localstack start`:** Configure the token with the LocalStack CLI (persistent on the machine), not by insisting on a shell env var for day-to-day use:
+   ```bash
+   localstack auth set-token <YOUR_AUTH_TOKEN>
+   ```
+   Confirm configuration without printing the full secret (masked output is OK):
+   ```bash
+   localstack auth show-token
+   ```
+   Expect `Valid: True` when a token is configured. Use `localstack auth show-token --plain` only when piping to another program, not for casual verification.
 
 ### Prerequisites
 
@@ -197,15 +256,11 @@ Before using the LocalStack Power, ensure you have the following installed:
    - SAM users: `pip install aws-sam-cli-local` (provides `samlocal`)
    - Pulumi users: `pip install pulumi-local` (provides `pulumilocal`)
 
-### Step 1: Set Your Auth Token
+### Step 1: Configure your auth token
 
-A LocalStack Auth Token is required. Core emulation features can be used with a free, non-commercial-use Hobby account, but some features require a paid subscription.
+**Every user** must configure a LocalStack Auth Token—including free Hobby accounts. The MCP server and CLI both rely on it. **Which features you can use** (including some MCP tools) depends on your plan tier; see https://app.localstack.cloud/workspace/auth-token
 
-Get your token at: https://app.localstack.cloud/workspace/auth-token
-
-**Configure it in the Power's `mcp.json`:**
-
-Open the LocalStack Power's `mcp.json` and replace `${LOCALSTACK_AUTH_TOKEN}` with your actual token value:
+**For Kiro MCP tools:** Ensure `mcp.json` passes a real token to the MCP process. You may either substitute the literal token in `env.LOCALSTACK_AUTH_TOKEN` or keep a placeholder if your environment injects secrets when Kiro starts the server:
 
 ```json
 {
@@ -221,9 +276,7 @@ Open the LocalStack Power's `mcp.json` and replace `${LOCALSTACK_AUTH_TOKEN}` wi
 }
 ```
 
-This is the only configuration needed for Kiro MCP tools to authenticate. Do **not** check for or require a shell environment variable — the token in `mcp.json` is passed directly to the MCP server and is sufficient.
-
-> **CLI usage only:** If you also run `localstack start` or `awslocal` commands from a terminal outside of Kiro, you can additionally run `localstack auth set-token <YOUR_AUTH_TOKEN>` to set your auth token within your local environment.
+**For terminal use** (`localstack start`, `awslocal`, Cloud Pods CLI, etc.): run **`localstack auth set-token <YOUR_AUTH_TOKEN>`** once per machine or CI image. The CLI stores credentials for the LocalStack container; you do not need to keep `LOCALSTACK_AUTH_TOKEN` in your shell profile for normal use.
 
 ### Step 2: Start LocalStack
 
@@ -239,9 +292,9 @@ localstack status
 curl http://localhost:4566/_localstack/health | jq
 ```
 
-### Step 3: Verify the MCP Server
+### Step 3: Confirm MCP tools (not shell env vars)
 
-The LocalStack MCP server is installed automatically via `npx` when Kiro starts. Verify your auth token is set as the `LOCALSTACK_AUTH_TOKEN` value in the Power's `mcp.json` (see Step 1). No shell environment variable is needed for the MCP server to work.
+After MCP is configured in `mcp.json`, confirm behavior by **calling MCP tools** — see _Try Power, health checks, and auth_ above. Do not re-check authentication by inspecting the user's shell environment.
 
 ### Step 4: Start Building
 
@@ -335,7 +388,7 @@ Try these starter commands:
 
 ### Chaos Engineering
 
-- **Always clean up faults**: After chaos testing, use `localstack-chaos-injector` with `action: clear` to remove all fault rules before running functional tests.
+- **Always clean up faults**: After chaos testing, use `localstack-chaos-injector` with `action: 'clear-all-faults'` (and `clear-latency` if you injected latency) before running functional tests.
 - **Test one failure mode at a time**: Inject faults for a single service or operation to isolate how your application responds.
 - **Combine with Cloud Pods**: Save a known-good state before injecting chaos so you can quickly restore it after testing.
 
@@ -358,9 +411,9 @@ localstack start 2>&1 | head -50
 
 ### MCP Server Not Connecting
 
-- Verify `LOCALSTACK_AUTH_TOKEN` is set to your actual token value in the Power's `mcp.json` (not the `${LOCALSTACK_AUTH_TOKEN}` placeholder)
+- Confirm the token in the Power's `mcp.json` is a real value (or that your IDE resolves `${LOCALSTACK_AUTH_TOKEN}` when launching MCP). Do not rely on the interactive shell having the variable set.
 - Ensure Node.js v22+ is installed: `node --version`
-- Try running manually: `LOCALSTACK_AUTH_TOKEN=your-token npx -y @localstack/localstack-mcp-server`
+- From a terminal, you can smoke-test the package with stdin closed only if you also pass the token for that one process — for example: `LOCALSTACK_AUTH_TOKEN=your-token npx -y @localstack/localstack-mcp-server` — but **prefer verifying from inside Kiro** by calling **`localstack-docs`** once the Power is loaded.
 
 ### Services Not Available
 
@@ -382,11 +435,12 @@ which awslocal
 
 If `which awslocal` returns a path, the tool is installed. The setup check `awslocal --version` will fail even when `awslocal` is correctly installed — use `which awslocal` instead.
 
-### Pro/Emulator Enhancement Features Not Working
+### Feature or MCP Tool Not Available
 
 - Verify your auth token is valid at https://app.localstack.cloud/
-- Confirm the token is set directly in the `env` block of the Power's `mcp.json`, not left as the `${LOCALSTACK_AUTH_TOKEN}` placeholder
-- Ensure your subscription tier includes the feature you're trying to use
+- For Kiro: confirm the MCP `env.LOCALSTACK_AUTH_TOKEN` value in `mcp.json` (or secret injection) is correct — use an MCP tool call to confirm, not `echo` in bash.
+- For CLI: run `localstack auth show-token` and confirm `Valid: True`
+- Confirm your **plan tier** includes the product feature or MCP capability you are using (some tools need a higher tier than Hobby)
 
 ---
 
