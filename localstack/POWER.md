@@ -223,7 +223,7 @@ Open the LocalStack Power's `mcp.json` and replace `${LOCALSTACK_AUTH_TOKEN}` wi
 
 This is the only configuration needed for Kiro MCP tools to authenticate. Do **not** check for or require a shell environment variable — the token in `mcp.json` is passed directly to the MCP server and is sufficient.
 
-> **CLI usage only:** If you also run `localstack start` or `awslocal` commands from a terminal outside of Kiro, you can additionally add `export LOCALSTACK_AUTH_TOKEN=your_token_here` to your shell profile (`~/.zshrc` or `~/.bashrc`). This is separate from the Kiro MCP configuration and not required for the Power to function.
+> **CLI usage only:** If you also run `localstack start` or `awslocal` commands from a terminal outside of Kiro, you can additionally run `localstack auth set-token <YOUR_AUTH_TOKEN>` to set your auth token within your local environment.
 
 ### Step 2: Start LocalStack
 
