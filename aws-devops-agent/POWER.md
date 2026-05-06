@@ -185,8 +185,7 @@ For cost optimization, architecture review, topology mapping, knowledge discover
 
 ```python
 aws___run_script(code="""
-import boto3, json
-
+import boto3
 client = boto3.client('devops-agent', region_name='us-east-1')
 
 SPACE_ID = 'YOUR_SPACE_ID'
@@ -459,7 +458,7 @@ Restart Kiro → `/mcp` to check connection → `/tools` to see `aws___call_aws`
 → `CreateChat` requires the user to be registered in the Operator App's identity provider (IDC or IAM). Use `aws sso login` for SSO identity. Alternatively, use `SendMessage` on investigation executionIds (from `CreateBacklogTask`) which works with any credential type.
 
 **"AccessDeniedException"**
-→ Missing IAM permissions. For Agent Toolkit: add `aws-mcp:InvokeMcp`, `aws-mcp:CallReadOnlyTool`, `aws-mcp:CallReadWriteTool`. For DevOps Agent APIs: attach `AIDevOpsAgentFullAccess` and create an agent service role with `AIDevOpsAgentAccessPolicy`. See [IAM docs](https://docs.aws.amazon.com/devopsagent/latest/userguide/security-iam.html).
+→ Missing IAM permissions. For Agent Toolkit: add `aws-mcp:InvokeMcp`, `aws-mcp:CallReadOnlyTool`, `aws-mcp:CallReadWriteTool`. For DevOps Agent APIs: attach `AIDevOpsAgentFullAccess` and create an agent service role with `AIDevOpsAgentAccessPolicy`. See [IAM permissions](https://docs.aws.amazon.com/devopsagent/latest/userguide/aws-devops-agent-security-devops-agent-iam-permissions.html).
 
 **"Service not available in your region"**
 → DevOps Agent is available in: us-east-1, us-west-2, ap-southeast-2, ap-northeast-1, eu-central-1, eu-west-1. Set `--metadata AWS_REGION=us-east-1` in mcp.json args.
@@ -501,6 +500,7 @@ See [AWS DevOps Agent Security](https://docs.aws.amazon.com/devopsagent/latest/u
 ## Support & Legal
 
 - **Documentation**: [AWS DevOps Agent User Guide](https://docs.aws.amazon.com/devopsagent/latest/userguide/)
-- **Support**: [AWS re:Post — DevOps Agent](https://repost.aws/tags/devops-agent)
+- **Setup**: [AWS MCP Server Getting Started](https://docs.aws.amazon.com/agent-toolkit/latest/userguide/getting-started.html)
+- **Support**: [AWS Support Center](https://console.aws.amazon.com/support/)
 - **License**: Apache-2.0
 - **Privacy**: [AWS Privacy Notice](https://aws.amazon.com/privacy/)
