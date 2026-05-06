@@ -467,6 +467,9 @@ Restart Kiro → `/mcp` to check connection → `/tools` to see `aws___call_aws`
 **"Tools not appearing"**
 → Verify: run `/mcp` in Kiro to check connection, ensure `mcp-proxy-for-aws` is installed, check credentials with `aws sts get-caller-identity`.
 
+**"MCP error -32000: Connection closed"**
+→ The MCP proxy started but exited immediately. Most common cause is missing or expired AWS credentials. Run `aws sts get-caller-identity` to verify, then `aws sso login` to refresh. Also check that `uvx` is in your PATH.
+
 ---
 
 ## 🎁 Tips for Maximum Effectiveness
