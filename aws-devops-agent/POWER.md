@@ -119,7 +119,7 @@ Call these via `aws___call_aws` with service `devops-agent` (except `SendMessage
 |-----------|-----------|---------|
 | `CreateChat` | `agentSpaceId, userId, userType` (`IAM`\|`IDC`\|`IDP`) | Create a new chat session → returns `executionId`. **userId and userType are required** |
 | `ListChats` | `agentSpaceId, userId?, maxResults?` | List recent chat sessions |
-| `SendMessage` | `agentSpaceId, executionId, content, userId, context?` | Send a message and stream the response. **Requires `aws___run_script`** — returns EventStream. userId is required for chat sessions (may be optional for investigation executionIds) |
+| `SendMessage` | `agentSpaceId, executionId, content, userId, context?` | Send a message and stream the response. **Requires `aws___run_script`** — returns EventStream. userId is required for chat sessions (may be optional for investigation executionIds). **Note**: use `call_boto3` only with chat executionIds (pure UUID from `create-chat`); investigation executionIds (`exe-ops1-*`) require the CLI path |
 
 ### Account & Resource Management
 | Operation | Parameters | Purpose |
@@ -252,6 +252,8 @@ For incidents requiring deep root cause analysis:
 6. If list-recommendations returns empty, trigger mitigation in place:
    aws___call_aws(cli_command="aws devops-agent update-backlog-task --agent-space-id SPACE_ID --task-id TASK_ID --task-status PENDING_START --region us-east-1")
    Re-poll get-backlog-task until COMPLETED again (2-5 min), then re-call list-recommendations.
+
+> **executionId format caveat**: `create-backlog-task` returns executionIds in `exe-ops1-UUID` format. The `aws___call_aws` CLI path handles this transparently, but `call_boto3(SendMessage)` expects a pure UUID. **Use `call_boto3` for chat sessions** (where `create-chat` returns a pure UUID) and **`aws___call_aws` CLI for investigation operations** (`list-journal-records`, `get-backlog-task`). This is a known service-side format inconsistency.
 ```
 
 **Stream progress to the user** — don't silently poll:
