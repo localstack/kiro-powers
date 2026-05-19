@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Requires: jq (https://jqlang.github.io/jq/)
 # Auto-approve aws___run_script when the code is a SendMessage via call_boto3
 # and contains no destructive operation.
 # Requires Kiro hook engine with stdin tool-input passthrough (not yet available).
@@ -9,8 +10,8 @@
 set -euo pipefail
 input=$(cat)
 code=$(echo "$input" | jq -r '.tool_input.code // ""')
-if echo "$code" | grep -qP "operation_name\s*=\s*['\"]SendMessage['\"]" && \
-   ! echo "$code" | grep -qP "operation_name\s*=\s*['\"](Delete|Terminate|Remove|Put|Create|Update)[A-Z]"; then
+if echo "$code" | grep -qE "operation_name[[:space:]]*=[[:space:]]*['\"]SendMessage['\"]" && \
+   ! echo "$code" | grep -qE "operation_name[[:space:]]*=[[:space:]]*['\"](Delete|Terminate|Remove|Put|Create|Update)[A-Z]"; then
   echo '{"decision": "allow"}'
 else
   echo '{}'
