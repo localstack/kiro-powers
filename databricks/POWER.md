@@ -28,6 +28,20 @@ The Databricks AI Dev Kit Power provides comprehensive access to the Databricks 
 
 **Authentication**: Requires a Databricks workspace and either an OAuth-authenticated CLI profile, an existing `~/.databrickscfg` profile, or a Personal Access Token (PAT).
 
+## Agent First-Action Protocol (CRITICAL)
+
+> **⚠️ MANDATORY pre-flight gate — read before any tool call:**
+>
+> On the **first turn** of any new conversation in this Power — and **before invoking any Databricks MCP tool** — the agent MUST run the credential-detection flow defined in [Step 3: Configure Authentication](#step-3-configure-authentication). Do not enumerate tools, call `get_current_user`, or attempt any MCP operation until detection has completed and the user has confirmed which credentials to use.
+>
+> **In-session auth-failure recovery.** If at any point during the session a Databricks MCP tool returns `Invalid access token`, `401 Unauthorized`, `403 token expired`, or any equivalent auth-failure status:
+>
+> 1. **Stop** further tool calls immediately. Do not retry the failed call.
+> 2. **Re-enter** the credential-detection flow — surface the current credential summary to the user and ask which option (A / B / C / D) they want to repair or switch to.
+> 3. **Recommend OAuth U2M (Option A)** as the first fix for interactive use. It auto-refreshes hourly and avoids the long-lived-secret expiry that typically causes these errors.
+>
+> **No-credentials default.** When no Databricks credentials are detected on first run, the agent's default recommendation is **Option A — OAuth U2M via the Databricks CLI**, since it's the safest interactive flow and covers the most common use case (a single human developer on a workstation).
+
 ## Available Steering Files
 
 This Power's steering files are downloaded from the [ai-dev-kit repository](https://github.com/databricks-solutions/ai-dev-kit/tree/main/databricks-skills) during onboarding and copied into the Power's `steering/` directory. Skills load on-demand based on your task.
@@ -709,9 +723,12 @@ The Power ships with a baseline `mcp.json` that uses an env-var reference for th
 >
 > 3. **Ask for explicit confirmation** before reusing detected credentials. Offer three choices:
 >    - Reuse the detected credentials for this Power
->    - Configure a different authentication option (A / B / C / D below)
+>    - Configure a different authentication option (A / B / C / D below) — **default recommendation is Option A (OAuth U2M)** for interactive use; auto-refreshes hourly and avoids the long-lived-secret expiry that PATs and OAuth M2M secrets eventually hit
 >    - Skip — the user will edit `mcp.json` themselves
+>
+>    If **no credentials at all** are detected, skip the "reuse" choice and walk the user directly through Option A (OAuth U2M) unless they explicitly ask for a different option.
 > 4. **Never copy credentials between configurations without explicit user approval.** Silent reuse is not acceptable, even when the credentials appear identical or compatible.
+> 5. **On auth failure during a session, loop back to detection.** If a Databricks MCP tool returns `Invalid access token`, `401 Unauthorized`, `403 token expired`, or any equivalent auth-failure status, immediately pause tool execution and re-enter this detection flow. Do not retry the failed tool, attempt a silent token refresh, or guess at a fix. Surface the current credential summary and recommend Option A (OAuth U2M) as the first repair path.
 >
 > Example of an acceptable summary the agent shows the user:
 > ```
