@@ -27,7 +27,7 @@ localstack start -d
 4. If `localstack-docs` fails, the MCP server itself is not starting. Check Kiro's MCP server logs.
 5. As a last resort, smoke-test the MCP package outside Kiro by running it with the token inline for one process: `LOCALSTACK_AUTH_TOKEN=your-token npx -y @localstack/localstack-mcp-server`. Prefer verifying from inside Kiro via `localstack-docs` whenever possible.
 
-**DO NOT** use `echo $LOCALSTACK_AUTH_TOKEN` or `printenv` to verify auth. The MCP token lives in `mcp.json`, not the interactive shell.
+**DO NOT** use the shell to verify MCP auth, including `$([ -n "$LOCALSTACK_AUTH_TOKEN" ] && echo YES || echo NO)`, `echo`, `printenv`, or `grep` on `LOCALSTACK`. The MCP token is injected from IDE/MCP configuration, which is unrelated to interactive shell profiles. Prefer a **`localstack-docs`** MCP call as the smoke test.
 
 ## Services Not Available
 

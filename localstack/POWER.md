@@ -28,6 +28,34 @@ author: 'LocalStack'
 
 # LocalStack Power
 
+## Non-negotiable: MCP auth token handling (read before onboarding)
+
+Agents often try to **probe** `LOCALSTACK_AUTH_TOKEN` in the shell (“is it set?”). That leaks whether a secret exists in the environment and violates how this power configures auth (via MCP `env`, not your login shell).
+
+**Throughout onboarding until the Step 4 `localstack-docs` MCP call succeeds:**
+
+- **Never use the shell to probe MCP’s token** (`LOCALSTACK_AUTH_TOKEN` as wired into MCP `env`).
+- Steps 3+ may use the terminal **only for LocalStack CLI** (`localstack auth show-token`, etc.) — never to test MCP’s injected env vars.
+
+**Banned examples — MCP token probing via shell (including but not limited to):**
+
+```bash
+# NEVER run any of these (or variants) to “validate” MCP configuration:
+echo "$LOCALSTACK_AUTH_TOKEN"
+echo "LOCALSTACK_AUTH_TOKEN is set: $([ -n "$LOCALSTACK_AUTH_TOKEN" ] && echo YES || echo NO)"
+test -n "$LOCALSTACK_AUTH_TOKEN"
+[ -z "$LOCALSTACK_AUTH_TOKEN" ]
+printenv LOCALSTACK_AUTH_TOKEN
+env | grep LOCALSTACK
+```
+
+**What to do instead:**
+
+- **Step 2:** Ask the user in chat whether their IDE/MCP config supplies a **real** token for `LOCALSTACK_AUTH_TOKEN` (see Step 2 text below). Do not use the terminal for this step.
+- **Step 4:** Call the **`localstack-docs`** MCP tool. That success or failure **is** the token/connectivity check. Do not pre-check via shell first.
+
+---
+
 ## Overview
 
 LocalStack is a fully functional local cloud stack that emulates AWS services on your machine. The LocalStack Power gives you intelligent tooling to manage your local cloud environment, deploy infrastructure, debug issues, and simulate real-world failure conditions — with no cloud waste.
@@ -41,7 +69,7 @@ Every developer must use a LocalStack auth token (including free Hobby accounts)
 ### Onboarding Checklist
 
 - [ ] **Step 1 — Validate prerequisites are installed**
-- [ ] **Step 2 — Validate auth token is configured for MCP**
+- [ ] **Step 2 — Validate auth token is configured for MCP (chat only; no terminal)**
 - [ ] **Step 3 — Validate auth token is configured for CLI**
 - [ ] **Step 4 — Confirm MCP connectivity**
 - [ ] **Step 5 — Start LocalStack**
@@ -72,19 +100,27 @@ Optional IaC wrappers (only validate if user's project uses them):
 
 ---
 
-### Step 2: Validate auth token is configured for MCP
+### Step 2: Validate auth token is configured for MCP (**chat only — no terminal**)
 
-The MCP server receives its auth token from the `env.LOCALSTACK_AUTH_TOKEN` entry in `mcp.json`. Check that the user's MCP configuration has a real token value (not the placeholder `${LOCALSTACK_AUTH_TOKEN}` unless their IDE resolves secrets at launch).
+This step **must not** use the terminal at all — not even to print YES/NO. Shell profiles do not define what Kiro passes to MCP; probing `$LOCALSTACK_AUTH_TOKEN` trained the wrong workflow.
 
-**DO NOT:**
-- Run `echo $LOCALSTACK_AUTH_TOKEN` or `printenv LOCALSTACK_AUTH_TOKEN` in the shell
-- Ask the user to export the token in their shell profile
-- Attempt to set the token yourself
+The MCP server receives its auth token from the `env.LOCALSTACK_AUTH_TOKEN` entry in MCP config (bundled power `mcp.json` typically uses `${LOCALSTACK_AUTH_TOKEN}`; the user’s IDE **must** resolve that placeholder to a literal token when the server starts).
 
-**DO:**
-- Ask the user: "Does your `mcp.json` have your real LocalStack auth token in `env.LOCALSTACK_AUTH_TOKEN`? You can get one at https://app.localstack.cloud/workspace/auth-token"
-- If the user confirms yes → mark Step 2 done.
-- If the user says no or is unsure → show them the expected `mcp.json` format and STOP until they confirm it's set:
+**STOP if you touched the terminal for Step 2.** Close the terminal step sheet and redo Step 2 in chat only.
+
+**DO NOT (Step 2):**
+- Run **any** shell command that expands, tests, or prints `LOCALSTACK_AUTH_TOKEN`, including `$([ -n "$LOCALSTACK_AUTH_TOKEN" ] && echo YES || echo NO)` and `grep`/`printenv`/`env` snippets
+- Ask the user to export the token in their shell profile **as the MCP fix**
+- Attempt to read or overwrite the user's token yourself
+
+**DO (Step 2), in order:**
+
+1. Ask the user (paraphrasing is fine):
+
+   > "LocalStack MCP needs your auth token at `env.LOCALSTACK_AUTH_TOKEN` in your MCP server config — not only in `.zshrc` / `.bashrc`. Did you configure your IDE so **`${LOCALSTACK_AUTH_TOKEN}` resolves to your real token** when the MCP server starts? Tokens are issued at https://app.localstack.cloud/workspace/auth-token — please confirm yes/no."
+
+2. If **yes** → mark Step 2 done **without** probing the shell. Proceed to Step 3. You will validate MCP connectivity in Step 4.
+3. If **no / unsure** → show them the intended shape of `env` once they’ve wired secrets in their IDE (**do not** ask them to paste the token here). STOP until they confirm they’ve configured and restarted MCP:
 
 ```json
 {
@@ -118,6 +154,8 @@ localstack auth show-token
 ---
 
 ### Step 4: Confirm MCP connectivity
+
+Do **not** run shell probes of `LOCALSTACK_AUTH_TOKEN` before or after failure — troubleshoot by explaining IDE/MCP wiring and restarting the server only.
 
 Call the **`localstack-docs`** MCP tool with a simple query (e.g., `"LocalStack overview"`).
 
