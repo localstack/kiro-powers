@@ -15,12 +15,12 @@ The Databricks AI Dev Kit Power provides comprehensive access to the Databricks 
 **Key capabilities:**
 - **SQL & Compute**: Execute SQL on warehouses, run Python/Scala on clusters, manage compute lifecycle
 - **Pipelines & Jobs**: Build Spark Declarative Pipelines (streaming tables, CDC, SCD Type 2, Auto Loader) and orchestrate multi-task DAGs
-- **Unity Catalog**: Manage tables, volumes, grants, tags, storage credentials, system tables, and metric views
+- **Unity Catalog**: Manage tables, volumes, grants, tags, storage credentials, system tables, metric views, and External Iceberg Reads (cross-engine interop via UC IRC)
 - **AI/BI Dashboards**: Create interactive visualizations, KPIs, and analytics dashboards
 - **Genie Spaces**: Natural-language data exploration over governed datasets
 - **Agent Bricks**: Build Knowledge Assistants (RAG) and Multi-Agent Supervisors
 - **Vector Search**: Semantic search and RAG with managed indexes
-- **Model Serving**: Deploy ML models and AI agents to scalable endpoints
+- **Model Serving**: Deploy ML models, AI agents, and pay-per-token Foundation Model APIs (FMAPI) to scalable endpoints; route through AI Gateway for guardrails, fallbacks, and rate limiting
 - **MLflow**: Track experiments, evaluate models, instrument tracing, query metrics
 - **Lakebase**: Provisioned and autoscale managed PostgreSQL for OLTP workloads
 - **Databricks Apps**: Full-stack web applications on the Lakehouse
