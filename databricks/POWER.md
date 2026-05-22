@@ -984,27 +984,29 @@ The Power ships with a baseline `mcp.json` that uses an env-var reference for th
 >
 >    If **no credentials at all** are detected, skip the "reuse" choice and walk the user directly through Option A (OAuth U2M) unless they explicitly ask for a different option.
 > 4. **Never copy credentials between configurations without explicit user approval.** Silent reuse is not acceptable, even when the credentials appear identical or compatible.
-> 5. **On auth failure during a session, loop back to detection.** If a Databricks MCP tool returns `Invalid access token`, `401 Unauthorized`, `403 token expired`, or any equivalent auth-failure status, immediately pause tool execution and re-enter this detection flow. Do not retry the failed tool, attempt a silent token refresh, or guess at a fix. Surface the current credential summary and recommend Option A (OAuth U2M) as the first repair path.
+> 5. **Present the choices neutrally.** Do not label any option as "recommended", "quickest", or "easiest" — credential reuse is the user's decision on its merits, not the agent's recommendation.
+> 6. **Always present all four options in A → B → C → D order**, even when no credentials are detected for a given option. Do **not** skip an option because detection found nothing for it — instead, show it with the "no credentials found, here's how to set up" path. Skipping options (e.g., showing only B/C/D, or A/C/D) makes the list look broken and confuses the user. The list must always read A, B, C, D — never B, C, D or A, B, D.
+> 7. **On auth failure during a session, loop back to detection.** If a Databricks MCP tool returns `Invalid access token`, `401 Unauthorized`, `403 token expired`, or any equivalent auth-failure status, immediately pause tool execution and re-enter this detection flow. Do not retry the failed tool, attempt a silent token refresh, or guess at a fix. Surface the current credential summary and recommend Option A (OAuth U2M) as the first repair path.
 >
 > Example of an acceptable summary the agent shows the user:
 > ```
 > Found existing Databricks configuration:
 >
 >   ~/.kiro/settings/mcp.json (top-level mcpServers.databricks):
->     host        = https://acme.cloud.databricks.com
+>     host        = https://<your-workspace>.cloud.databricks.com
 >     auth method = OAuth U2M (via DATABRICKS_CONFIG_PROFILE=DEFAULT)
 >
 >   ~/.databrickscfg:
 >     [DEFAULT]
->       host       = https://acme.cloud.databricks.com
+>       host       = https://<your-workspace>.cloud.databricks.com
 >       auth_type  = databricks-cli
 >     [prod-aws]
->       host       = https://acme-prod.cloud.databricks.com
+>       host       = https://<your-workspace-prod>.cloud.databricks.com
 >       auth_type  = pat
 >       token      = dapi5f2a***4f2c     (dapi prefix + 4 + last 4)
 >       comment    = "Power onboarding 2026-05-19"
 >     [ci-sp]
->       host          = https://acme.cloud.databricks.com
+>       host          = https://<your-workspace>.cloud.databricks.com
 >       client_id     = 1a2b3c4d-5e6f-7890-abcd-ef1234567890
 >       client_secret = abcd***9z8y    (first 4 + last 4 only)
 >
@@ -1139,6 +1141,15 @@ Reference: [PAT (legacy)](https://docs.databricks.com/aws/en/dev-tools/auth/pat)
 
 OAuth user-to-machine: the Databricks CLI opens a browser, you authenticate as yourself, and credentials land in `~/.databrickscfg`. Each access token is valid for one hour and is auto-refreshed by the Databricks SDK. This is the safest interactive flow because there's no long-lived secret to leak.
 
+> **Agent reuse-detection for Option A:** If `~/.databrickscfg` contains profiles with `auth_type = databricks-cli`, the agent MUST list each one with its host so the user can pick which to use, e.g.:
+> ```
+> Found OAuth U2M profiles in ~/.databrickscfg:
+>   1. [DEFAULT]    host = https://<your-workspace>.cloud.databricks.com
+>   2. [prod-aws]   host = https://<your-workspace-prod>.cloud.databricks.com
+>   3. Run a fresh databricks auth login (creates a new profile)
+> ```
+> If no U2M profiles exist, say so explicitly and walk the user through `databricks auth login` below.
+
 ```bash
 databricks auth login --host https://<your-workspace>.cloud.databricks.com --profile DEFAULT
 ```
@@ -1195,6 +1206,21 @@ The only edit is `"disabled": true` → `"disabled": false`. The env reference a
 #### Option B — OAuth M2M with Service Principal (recommended for headless / CI/CD)
 
 OAuth machine-to-machine: a Databricks service principal authenticates with `client_id` + `client_secret` and the SDK auto-issues 1-hour access tokens with no browser flow. Use this for production agents, scheduled jobs, and shared environments. Per Databricks docs, this is intended for *"unattended processes, such as automated CLI commands or REST API calls made from scripts or applications."*
+
+> **Agent reuse-detection for Option B:** If `~/.databrickscfg` contains profiles with `client_id` set, or the shell environment has `DATABRICKS_CLIENT_ID` / `DATABRICKS_CLIENT_SECRET`, the agent MUST list each candidate with its `client_id` (full) and secret fingerprint so the user can recognize it, e.g.:
+> ```
+> Found OAuth M2M credentials:
+>   1. ~/.databrickscfg [ci-sp]
+>      host          = https://<your-workspace>.cloud.databricks.com
+>      client_id     = 1a2b3c4d-5e6f-7890-abcd-ef1234567890
+>      client_secret = abcd***9z8y     (first 4 + last 4 only)
+>   2. Shell env DATABRICKS_CLIENT_ID
+>      host          = https://<your-workspace>.cloud.databricks.com
+>      client_id     = 9z8y7x6w-...-fedcba0987654321
+>      client_secret = wxyz***1234     (first 4 + last 4 only)
+>   3. Generate a new service principal + OAuth secret (steps below)
+> ```
+> If no M2M credentials are detected, say so explicitly and walk the user through the **Prerequisites** below.
 
 **Prerequisites:**
 1. **Create a service principal** in the Databricks account console (Identity and access → Service principals)
@@ -1253,6 +1279,23 @@ export DATABRICKS_CLIENT_SECRET="<oauth-secret>"
 
 If you already have a working profile (e.g., `prod-aws`) in `~/.databrickscfg` — set up earlier via `databricks auth login`, manual editing, or a configuration-management tool — just point the env reference at it. The underlying auth method (OAuth U2M, OAuth M2M, or PAT) is whatever the profile already uses.
 
+> **Agent reuse-detection for Option C:** The agent MUST enumerate every profile in `~/.databrickscfg`, showing host, `auth_type`, and a credential fingerprint appropriate to the profile's auth method, so the user can pick one explicitly. Example:
+> ```
+> Profiles in ~/.databrickscfg:
+>   1. [DEFAULT]
+>      host       = https://<your-workspace>.cloud.databricks.com
+>      auth_type  = databricks-cli       (OAuth U2M — no static credential)
+>   2. [prod-aws]
+>      host       = https://<your-workspace-prod>.cloud.databricks.com
+>      auth_type  = pat
+>      token      = dapi5f2a***4f2c     (dapi prefix + 4 + last 4)
+>   3. [ci-sp]
+>      host          = https://<your-workspace>.cloud.databricks.com
+>      client_id     = 1a2b3c4d-5e6f-7890-abcd-ef1234567890
+>      client_secret = abcd***9z8y     (first 4 + last 4 only)
+> ```
+> If `~/.databrickscfg` does not exist or has no profiles, the agent MUST say so explicitly and offer to switch the user to Option A.
+
 ```bash
 export DATABRICKS_CONFIG_PROFILE=prod-aws
 ```
@@ -1296,6 +1339,20 @@ export DATABRICKS_CONFIG_PROFILE=prod-aws
 #### Option D — Personal Access Token (legacy)
 
 > **Databricks officially marks PAT as legacy.** From the docs: *"Where possible, Databricks recommends using OAuth instead of PATs for user account authentication because OAuth provides stronger security."* Use this only if Options A–C aren't available — for example, an automated tool that doesn't support OAuth and where you can't use a service principal.
+
+> **Agent reuse-detection for Option D:** If `~/.databrickscfg` contains profiles with `token` set (or `auth_type = pat`), or the shell environment has `DATABRICKS_TOKEN`, or the top-level `mcpServers` block in `~/.kiro/settings/mcp.json` already has a PAT configured, the agent MUST list each candidate with its host and PAT fingerprint, e.g.:
+> ```
+> Found existing PATs:
+>   1. ~/.kiro/settings/mcp.json (top-level mcpServers.databricks)
+>      host  = https://<your-workspace>.cloud.databricks.com
+>      token = dapi5f2a***4f2c     (dapi prefix + 4 + last 4)
+>   2. ~/.databrickscfg [prod-aws]
+>      host    = https://<your-workspace-prod>.cloud.databricks.com
+>      token   = dapie8cf***84fc     (dapi prefix + 4 + last 4)
+>      comment = "Power onboarding 2026-05-19"
+>   3. Generate a new PAT (workspace UI steps below)
+> ```
+> If no PAT is detected, say so explicitly and walk the user through the **Generate a PAT in the workspace UI** steps below.
 
 PATs are simple bearer tokens. **Constraints worth knowing:**
 - Lifetime up to ~730 days (set at creation)
