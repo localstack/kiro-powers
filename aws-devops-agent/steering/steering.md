@@ -79,12 +79,6 @@ Best for: cost optimization, architecture review, topology mapping, knowledge di
 - Do NOT fan out to every space by default — it's slow and produces noisy output
 - When comparing across spaces, present a synthesized delta, not two raw responses
 
-## Multi-AgentSpace Routing
-- If user mentions multiple services, accounts, or regions → run `list-agent-spaces` and route to relevant spaces
-- If >1 space exists and question is ambiguous → ask the user which environment, don't guess
-- If a space times out (>90s) or returns scope-mismatch errors → skip it and surface results from responding spaces
-- Do NOT fan out to every space by default — it's slow and produces noisy output
-- When comparing across spaces, present a synthesized delta, not two raw responses
 - **MCP error -32000: Connection closed** → Missing/expired credentials or `uvx` not in PATH
 
 ## Security
