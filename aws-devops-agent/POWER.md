@@ -180,7 +180,7 @@ Start with chat for instant answers. Escalate to investigation only when the pro
 ```
 1. aws___call_aws("aws devops-agent create-chat --agent-space-id SPACE_ID --user-id USER_ID --user-type IAM --region us-east-1")
    → executionId (instant)
-2. aws___run_script → call_boto3(SendMessage, params={agentSpaceId, executionId, userId, content})
+2. aws___run_script → call_boto3(SendMessage, params={agentSpaceId, executionId, userId, content})  ← shorthand for `await call_boto3(service_name='devops-agent', operation_name='SendMessage', params={...})`
    → instant response (2-10s)
 3. aws___run_script → call_boto3(SendMessage, params={..., content="follow-up question"})
    → full context retained across messages
@@ -591,9 +591,33 @@ These tools are inherently safe regardless of arguments — they **cannot modify
 
 ### Future: granular hooks
 
-Kiro's hook engine currently cannot do granular read/write gating for MCP tools (no stdin tool-input passthrough, no MCP tool name matching in matchers). When the engine adds these capabilities, hook scripts for auto-approving read-only `call_aws` commands (e.g. `list-*`, `get-*`, `describe-*`) will be possible. Pre-written scripts are in `.kiro/hooks/` for when that support lands.
+Kiro's hook engine currently cannot do granular read/write gating for MCP tools (no stdin tool-input passthrough, no MCP tool name matching in matchers). When the engine adds these capabilities, hook scripts for auto-approving read-only `call_aws` commands (e.g. `list-*`, `get-*`, `describe-*`) will be possible. When these capabilities are added, auto-approval of read-only DevOps Agent commands will be possible.
 
 ---
+
+## Multi-AgentSpace Workflows
+
+When `list-agent-spaces` returns more than one space, route questions to the appropriate space based on the user's intent:
+
+| Question shape | Strategy |
+|---------------|----------|
+| Scoped to one environment ("prod is broken") | Single space — pick the matching one |
+| Spans environments ("compare prod vs staging") | Parallel — query each, synthesize |
+| Ambiguous ("our service is slow") | Ask the user which environment |
+
+### Parallel pattern (2 spaces)
+```
+1. aws___call_aws("aws devops-agent list-agent-spaces --region us-east-1") → find relevant spaces
+2. aws___call_aws("aws devops-agent create-chat --agent-space-id SPACE_A --user-id USER_ID --user-type IAM --region us-east-1") → exec_a
+3. aws___call_aws("aws devops-agent create-chat --agent-space-id SPACE_B --user-id USER_ID --user-type IAM --region us-east-1") → exec_b
+4. aws___run_script → call_boto3(SendMessage, params={agentSpaceId: SPACE_A, executionId: exec_a, userId: USER_ID, content: "<question>"})
+5. aws___run_script → call_boto3(SendMessage, params={agentSpaceId: SPACE_B, executionId: exec_b, userId: USER_ID, content: "<question>"})
+6. Synthesize — present a side-by-side comparison, not two raw dumps
+```
+
+Don't fan out to every space by default — most questions are scoped to one environment. Only parallelize when explicitly comparing.
+
+See `steering/steering.md` for routing rules and error handling.
 
 ## ⚠️ Security Considerations
 
