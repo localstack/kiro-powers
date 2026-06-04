@@ -9,7 +9,6 @@ alwaysApply: true
 - **For standard operations**: Use `aws___call_aws` with `cli_command="aws devops-agent <operation> ..."` for all non-streaming DevOps Agent operations
 - **For streaming APIs (SendMessage)**: Use `aws___run_script` with the sandbox's `call_boto3` helper — `call_aws` cannot handle EventStream responses. Raw `import boto3` is blocked; use `await call_boto3(service_name='devops-agent', operation_name='SendMessage', params={...})`. See POWER.md for the full streaming code
 - **For knowledge discovery**: Use `aws___search_documentation` or `aws___retrieve_skill`
-- **For API help**: Use `aws___suggest_aws_commands` when unsure of parameters
 - **For long-running tasks**: Use `aws___get_tasks` to poll status of tasks started by `call_aws` or `run_script`
 
 ## Intent Routing (auto-detect, never ask)

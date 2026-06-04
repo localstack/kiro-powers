@@ -54,7 +54,6 @@ You are enhanced with the **AWS DevOps Agent**, an AI-powered operational intell
 |------|---------|
 | `aws___call_aws` | Execute any AWS API — use with `devops-agent` service for standard (non-streaming) operations |
 | `aws___run_script` | Execute Python in a sandboxed environment with AWS API access — **required for streaming APIs** like `SendMessage` |
-| `aws___suggest_aws_commands` | Get syntax help for DevOps Agent APIs (use when unsure of parameters) |
 | `aws___search_documentation` | Search AWS docs, skills (formerly Agent SOPs), and best practices |
 | `aws___read_documentation` | Read full AWS documentation pages |
 | `aws___retrieve_skill` | Retrieve domain-specific expertise, workflows, and best practices (formerly `retrieve_agent_sop`) |
@@ -564,7 +563,6 @@ These tools are inherently safe regardless of arguments — they **cannot modify
       "autoApprove": [
         "aws___list_regions",
         "aws___get_regional_availability",
-        "aws___suggest_aws_commands",
         "aws___search_documentation",
         "aws___read_documentation",
         "aws___recommend",
