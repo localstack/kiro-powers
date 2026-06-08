@@ -20,6 +20,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ---
 
+### aws-devops-agent
+**AWS DevOps Agent** - AI agent for AWS operational intelligence. Investigate incidents, optimize costs, review architecture, map topology, chat with the agent, and get remediation — all enhanced with your local workspace context.
+
+**MCP Servers:** aws-mcp
+
+---
+
 ### aws-healthomics
 
 **Create and Manage Bioinformatics Workflows with AWS HealthOmics** - create, migrate, run, debug and identify optimization opportunities for bioinformatics workflows in AWS HealthOmics.
@@ -42,6 +49,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ---
 
+### aws-transform
+**Agents modernizing the world's infrastructure and software**, backed by years of AWS expertise. AWS Transform is a full modernization factory — connecting assessment through execution in a single experience, so the manual handoffs and lost context that commonly stall large-scale migrations and ongoing tech debt reduction no longer slow you down. This power brings AWS Transform directly into Kiro. AWS Transform custom is the first supported capability, with more playbooks on the way. Find out more at [aws.amazon.com/transform](https://aws.amazon.com/transform/)
+
+**MCP Servers:** None
+
+---
+
 ### cloud-architect
 **Build infrastructure on AWS** - Build AWS infrastructure with CDK in Python following AWS Well-Architected framework best practices.
 
@@ -53,6 +67,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 **Amazon CloudWatch Application Signals** - Monitor service health, analyze SLO compliance, and perform root cause analysis with distributed tracing and audit capabilities.
 
 **MCP Servers:** awslabs.cloudwatch-applicationsignals-mcp-server
+
+---
+
+### databricks
+**Databricks AI Dev Kit** - Comprehensive Databricks development toolkit with 44 MCP tools (180+ operations) and expert guidance for building data pipelines, ML workflows, dashboards, jobs, and applications on the Databricks platform across AWS, Azure, and GCP.
+
+**MCP Servers:** databricks (ai-dev-kit local MCP server)
 
 ---
 
